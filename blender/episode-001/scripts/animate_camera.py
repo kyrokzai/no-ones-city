@@ -112,8 +112,8 @@ def set_emission(name, strength):
 def polish():
     scene = bpy.context.scene
     # 1. less blown-out windows (keep them warm) - idempotent, always applied
-    set_emission("window", 2.4)
-    set_emission("window_soft", 1.6)
+    set_emission("window", 3.0)
+    set_emission("window_soft", 1.9)
     set_emission("lamp", 16.0)
     # M0.4: the south-east plaza lamp stood right on the camera's approach line to the fountain;
     # move it ~30 deg further round the plaza ring (absolute position -> idempotent)
