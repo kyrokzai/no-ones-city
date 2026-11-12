@@ -1,4 +1,4 @@
-"""NO ONE'S CITY — Episode 001 / M0.3: cinematic camera for a 15 s Instagram Reels preview.
+"""NO ONE'S CITY — Episode 001 / M0.4: cinematic camera (polished) for a 15 s Instagram Reels preview.
 
 Works on the existing M0.2 scene (does NOT rebuild the district):
   1. opens scenes/noc_ep001_district.blend
@@ -8,10 +8,10 @@ Works on the existing M0.2 scene (does NOT rebuild the district):
   5. optionally saves, renders control frames and a light MP4 preview
 
 Shots (24 fps):
-   0-4 s  low glide along the lit house fronts on Front Street
-   4-8 s  push in up the avenue towards the plaza / fountain / cherry trees
-   8-12 s crane up and arc left, revealing the waterfront, lake and skyline
-  12-15 s wide establishing shot of the district at sunset
+   0-3 s  elevated glide down Cross Street: lit modern house fronts on both sides, plaza ahead
+   3-7 s  smooth push in along the street to the plaza and fountain
+   7-11 s crane up over the roofs (above the open street / free plot), revealing the waterfront
+  11-15 s wide sunset view: district, fountain, lake, skyline and sun, clean sky band for the logo
 
 Usage (bpy module or `blender -b -P animate_camera.py -- ...`):
     python animate_camera.py --blend ../scenes/noc_ep001_district.blend --save ../scenes/noc_ep001_district.blend \
@@ -37,17 +37,44 @@ FRAMES = 360
 
 # (frame, camera location, look-at target, lens mm)
 KEYS = [
-    (-23, (31.0, -32.4, 2.0),  (26.0, -20.8, 2.0), 26),   # pre-roll: frame 1 starts already moving
-    (1,   (26.0, -32.3, 2.05), (21.0, -20.5, 2.0), 26),
-    (48,  (16.0, -32.2, 2.15), (9.0, -19.5, 1.9), 26),
-    (96,  (6.0, -31.0, 2.4),   (1.5, -12.0, 1.6), 27),
-    (144, (2.8, -24.0, 3.1),   (0.5, -3.0, 0.9), 28),
-    (192, (1.2, -18.0, 4.3),   (0.0, 0.0, 0.6), 28),
-    (240, (-6.5, -18.5, 12.5), (0.5, 13.0, 2.0), 28),
-    (288, (-15.0, -31.0, 26.0), (2.0, 26.0, 2.0), 29),
-    (360, (-16.5, -44.0, 31.0), (3.0, 15.0, 4.0), 30),
+    (-23, (48.0, -8.0, 10.4),  (18.0, -3.5, 0.4), 28),   # pre-roll: frame 1 starts already moving
+    (1,   (44.0, -7.0, 9.8),   (14.0, -3.0, 0.4), 28),
+    (72,  (32.0, -4.5, 7.0),   (6.0, 0.0, 0.9), 28),
+    (120, (22.0, -3.0, 5.0),   (3.0, 0.0, 1.6), 28),
+    (168, (14.0, -3.2, 5.4),   (0.0, 1.5, 1.4), 28),
+    (216, (13.2, -10.0, 12.5), (0.0, 6.0, 1.5), 28),
+    (264, (12.0, -24.0, 22.0), (0.0, 40.0, 7.0), 27),
+    (360, (-4.0, -46.0, 32.0), (2.0, 30.0, 10.0), 26),
 ]
-CONTROL_FRAMES = [1, 72, 168, 264, 360]
+CONTROL_FRAMES = [1, 48, 96, 144, 192, 240, 288, 360]  # 0, 2, 4, 6, 8, 10, 12, 15 s
+
+# screen-space thresholds for the analysis
+GRID_X, GRID_Y = 18, 32
+NEAR_WALL_M = 10.0        # a vertical surface closer than this counts as a "near wall"
+MAX_NEAR_WALL = 0.08      # share of the frame
+NEAR_OBJECT_M = 8.0       # any non-ground object closer than this ...
+MAX_NEAR_OBJECT = 0.035   # ... may cover at most this share (plaza furniture on the approach is fine; lamp heads / crowns are not)
+MAX_SINGLE_BUILDING = 0.22
+MAX_SKY = 0.55
+MAX_ASPHALT = 0.40
+MAX_TURN_DEG_S = 30.0
+KEY_POINTS = {            # name -> world point
+    "fountain": (0.0, 0.0, 2.6),
+    "plaza_ring": (0.0, -6.7, 0.35),
+    "waterfront": (0.0, 40.5, 0.4),
+    "lake": (30.0, 120.0, -0.85),
+    "skyline": (60.0, 310.0, 30.0),
+    "sun": (190.0, 900.0, 88.0),
+}
+# which key points must be visible (in frame and unoccluded) in which time window (seconds)
+REQUIRED = [
+    ((0.0, 3.0), ["fountain"]),
+    ((3.0, 7.0), ["fountain"]),
+    ((7.0, 11.0), ["fountain"]),
+    ((10.5, 15.0), ["waterfront"]),
+    ((11.0, 15.0), ["lake", "skyline"]),
+    ((13.0, 15.0), ["fountain", "sun"]),
+]
 
 
 def parse_args():
@@ -57,11 +84,12 @@ def parse_args():
     p.add_argument("--blend", default=os.path.join(here, "..", "scenes", "noc_ep001_district.blend"))
     p.add_argument("--save", default="")
     p.add_argument("--control-frames", default="", help="directory for the 5 control frames")
-    p.add_argument("--control-samples", type=int, default=48)
+    p.add_argument("--control-samples", type=int, default=32)
     p.add_argument("--preview-video", default="")
     p.add_argument("--samples", type=int, default=8)
     p.add_argument("--engine", default="CYCLES", choices=["CYCLES", "EEVEE"])
     p.add_argument("--check-only", action="store_true")
+    p.add_argument("--report", default="", help="write the trajectory / composition report (JSON)")
     return p.parse_known_args(argv)[0]
 
 
@@ -87,6 +115,13 @@ def polish():
     set_emission("window", 2.4)
     set_emission("window_soft", 1.6)
     set_emission("lamp", 16.0)
+    # M0.4: the south-east plaza lamp stood right on the camera's approach line to the fountain;
+    # move it ~30 deg further round the plaza ring (absolute position -> idempotent)
+    a = -1.0
+    for suffix in ("_pole", "_head", "_cap", "_light"):
+        ob = bpy.data.objects.get("PlazaLamp_3" + suffix)
+        if ob:
+            ob.location.x, ob.location.y = math.cos(a) * 9.9, math.sin(a) * 9.9
     if scene.get("noc_m03_polish"):
         return
     attach_generator_state()
@@ -167,39 +202,181 @@ def build_camera():
 
 # --------------------------------------------------------------------------- validation
 
-def validate(cam):
-    """Clearance to geometry along the whole path + speed smoothness."""
+def _category(ob):
+    if ob is None:
+        return "sky"
+    names = {c.name for c in ob.users_collection}
+    if "Background" in names:
+        return "sky"            # skyline / ridges / sun read as the backdrop
+    if "Roads" in names:
+        return "asphalt" if ob.name.split("_")[0] in ("Avenue", "CrossSt", "FrontSt", "LakeSt", "WestSt", "EastSt", "Junction") \
+            and "walk" not in ob.name else "street"
+    if ob.name == "Lake":
+        return "water"
+    if "Houses" in names:
+        return "house"
+    return "other"
+
+
+def _house_root(ob):
+    while ob.parent is not None:
+        ob = ob.parent
+    return ob.name
+
+
+def analyse_frame(scene, cam, dg):
+    """Cast a GRID_X x GRID_Y grid of rays through the camera frustum and classify what fills the frame."""
+    from bpy_extras.object_utils import world_to_camera_view
+    mw = cam.matrix_world
+    origin = mw.translation.copy()
+    frame = cam.data.view_frame(scene=scene)        # 4 corners in camera space (z = -d)
+    tr, br, bl, tl = frame
+    counts = {"sky": 0, "asphalt": 0, "street": 0, "water": 0, "house": 0, "other": 0}
+    near_wall = 0
+    near_any = 0
+    per_building = {}
+    n = GRID_X * GRID_Y
+    for iy in range(GRID_Y):
+        v = (iy + 0.5) / GRID_Y
+        left = tl.lerp(bl, v)
+        right = tr.lerp(br, v)
+        for ix in range(GRID_X):
+            u = (ix + 0.5) / GRID_X
+            d = (mw.to_3x3() @ left.lerp(right, u)).normalized()
+            hit, loc, nrm, _i, ob, _m = scene.ray_cast(dg, origin, d, distance=2000)
+            cat = _category(ob if hit else None)
+            counts[cat] += 1
+            if hit:
+                dist = (loc - origin).length
+                if dist < NEAR_WALL_M and abs(nrm.z) < 0.5:
+                    near_wall += 1
+                if dist < NEAR_OBJECT_M and nrm.z < 0.7 and cat not in ("asphalt", "street", "water"):
+                    near_any += 1
+                if cat == "house":
+                    r = _house_root(ob)
+                    per_building[r] = per_building.get(r, 0) + 1
+    share = {k: v / n for k, v in counts.items()}
+    biggest = max(per_building.items(), key=lambda kv: kv[1]) if per_building else ("-", 0)
+    # bright lamp heads must not fly through the frame up close
+    close_lamps = []
+    for ob in LAMP_HEADS:
+        p = ob.matrix_world.translation
+        dist = (p - origin).length
+        if dist < 10.0:
+            c = world_to_camera_view(scene, cam, p)
+            if -0.05 < c.x < 1.05 and -0.05 < c.y < 1.05 and c.z > 0:
+                close_lamps.append(f"{ob.name}@{dist:.1f}m")
+    # key point visibility
+    vis = {}
+    for name, pt in KEY_POINTS.items():
+        p = Vector(pt)
+        c = world_to_camera_view(scene, cam, p)
+        inside = 0.03 < c.x < 0.97 and 0.03 < c.y < 0.97 and c.z > 0
+        visible = False
+        if inside:
+            d = p - origin
+            dist = d.length
+            hit, loc, *_ = scene.ray_cast(dg, origin, d.normalized(), distance=dist)
+            visible = (not hit) or (loc - origin).length > dist - 1.5
+            if name in ("skyline", "sun") and hit:       # far targets: a hit on the backdrop counts as visible
+                visible = visible or (loc - origin).length > 250
+        vis[name] = visible
+    return {
+        "share": share, "near_wall": near_wall / n, "near_object": near_any / n, "close_lamps": close_lamps,
+        "biggest_building": (biggest[0], biggest[1] / n), "visible": vis,
+        "forward": (mw.to_3x3() @ Vector((0, 0, -1))).normalized(), "pos": origin,
+    }
+
+
+LAMP_HEADS = []
+
+
+def validate(cam, step=2):
+    """Physical clearance + screen-space composition checks along the whole move."""
     scene = bpy.context.scene
+    LAMP_HEADS[:] = [o for o in bpy.data.objects if "Lamp" in o.name and o.name.endswith("_head")]
     dirs = [Vector(d).normalized() for d in
             [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1),
              (1, 1, 0), (1, -1, 0), (-1, 1, 0), (-1, -1, 0), (1, 0, -1), (-1, 0, -1), (0, 1, -1), (0, -1, -1)]]
-    min_clear, min_frame, min_ground = 1e9, 0, 1e9
-    positions = []
-    for f in range(1, FRAMES + 1):
+    min_clear, min_frame = 1e9, 0
+    frames = []
+    for f in range(1, FRAMES + 1, step):
         scene.frame_set(f)
         dg = bpy.context.evaluated_depsgraph_get()
         p = cam.matrix_world.translation.copy()
-        positions.append(p)
         for d in dirs:
             hit, loc, *_ = scene.ray_cast(dg, p, d, distance=50)
-            if hit:
-                dist = (loc - p).length
-                if dist < min_clear:
-                    min_clear, min_frame = dist, f
-                if d.z == -1:
-                    min_ground = min(min_ground, dist)
-    speeds = [(positions[i + 1] - positions[i]).length * FPS for i in range(len(positions) - 1)]
-    accel = [abs(speeds[i + 1] - speeds[i]) * FPS for i in range(len(speeds) - 1)]
-    report = {
-        "min_clearance_m": round(min_clear, 2), "at_frame": min_frame,
-        "min_height_above_surface_m": round(min_ground, 2),
-        "speed_m_s": {"min": round(min(speeds), 2), "max": round(max(speeds), 2)},
+            if hit and (loc - p).length < min_clear:
+                min_clear, min_frame = (loc - p).length, f
+        a = analyse_frame(scene, cam, dg)
+        a["frame"] = f
+        frames.append(a)
+    if frames[-1]["frame"] != FRAMES:
+        scene.frame_set(FRAMES)
+        a = analyse_frame(scene, cam, bpy.context.evaluated_depsgraph_get())
+        a["frame"] = FRAMES
+        frames.append(a)
+    issues = []
+    for a, b in zip(frames, frames[1:]):
+        dt = (b["frame"] - a["frame"]) / FPS
+        b["speed"] = (b["pos"] - a["pos"]).length / dt
+        b["turn"] = math.degrees(a["forward"].angle(b["forward"])) / dt
+    frames[0]["speed"], frames[0]["turn"] = frames[1]["speed"], frames[1]["turn"]
+    for a in frames:
+        t = (a["frame"] - 1) / FPS
+        s = a["share"]
+        if a["near_wall"] > MAX_NEAR_WALL:
+            issues.append(f"f{a['frame']} near wall covers {a['near_wall']:.0%}")
+        if a["close_lamps"]:
+            issues.append(f"f{a['frame']} lamp head in frame up close: {', '.join(a['close_lamps'])}")
+        if a["near_object"] > MAX_NEAR_OBJECT:
+            issues.append(f"f{a['frame']} near object covers {a['near_object']:.1%}")
+        if a["biggest_building"][1] > MAX_SINGLE_BUILDING:
+            issues.append(f"f{a['frame']} {a['biggest_building'][0]} covers {a['biggest_building'][1]:.0%}")
+        if s["sky"] > MAX_SKY:
+            issues.append(f"f{a['frame']} sky {s['sky']:.0%}")
+        if s["asphalt"] > MAX_ASPHALT:
+            issues.append(f"f{a['frame']} asphalt {s['asphalt']:.0%}")
+        if a["turn"] > MAX_TURN_DEG_S:
+            issues.append(f"f{a['frame']} turn {a['turn']:.0f} deg/s")
+        for (t0, t1), names in REQUIRED:
+            if t0 <= t <= t1:
+                for nm in names:
+                    if not a["visible"][nm]:
+                        issues.append(f"f{a['frame']} {nm} not visible")
+    speeds = [a["speed"] for a in frames]
+    accel = [abs(b["speed"] - a["speed"]) / ((b["frame"] - a["frame"]) / FPS) for a, b in zip(frames, frames[1:])]
+    summary = {
+        "frames_checked": len(frames),
+        "min_clearance_m": round(min_clear, 2), "min_clearance_frame": min_frame,
+        "speed_m_s": [round(min(speeds), 2), round(max(speeds), 2)],
         "max_accel_m_s2": round(max(accel), 2),
-        "path_length_m": round(sum(speeds) / FPS, 1),
+        "max_accel_frame": frames[accel.index(max(accel)) + 1]["frame"],
+        "max_turn_deg_s": round(max(a["turn"] for a in frames), 1),
+        "max_near_wall_share": round(max(a["near_wall"] for a in frames), 3),
+        "max_near_object_share": round(max(a["near_object"] for a in frames), 3),
+        "max_single_building_share": round(max(a["biggest_building"][1] for a in frames), 3),
+        "max_sky_share": round(max(a["share"]["sky"] for a in frames), 3),
+        "max_asphalt_share": round(max(a["share"]["asphalt"] for a in frames), 3),
+        "issues": issues,
     }
-    print("[NOC] path check:", report)
+    per_second = []
+    for a in frames:
+        if (a["frame"] - 1) % FPS == 0 or a["frame"] == FRAMES:
+            per_second.append({
+                "t": round((a["frame"] - 1) / FPS, 1), "frame": a["frame"],
+                "speed": round(a["speed"], 1), "turn": round(a["turn"], 1),
+                "sky": round(a["share"]["sky"], 2), "asphalt": round(a["share"]["asphalt"], 2),
+                "houses": round(a["share"]["house"], 2), "water": round(a["share"]["water"], 2),
+                "near_wall": round(a["near_wall"], 3), "near_object": round(a["near_object"], 3), "biggest_building": round(a["biggest_building"][1], 2),
+                "visible": [k for k, v in a["visible"].items() if v],
+            })
+    print("[NOC] path check:", {k: v for k, v in summary.items() if k != "issues"})
+    print(f"[NOC] issues ({len(issues)}):", issues[:25])
+    for row in per_second:
+        print("   ", row)
     scene.frame_set(1)
-    return report
+    return {"summary": summary, "per_second": per_second}
 
 
 # --------------------------------------------------------------------------- render
@@ -225,7 +402,7 @@ def render_control_frames(out_dir, engine, samples):
     s.render.image_settings.file_format = "PNG"
     for f in CONTROL_FRAMES:
         s.frame_set(f)
-        s.render.filepath = os.path.join(os.path.abspath(out_dir), f"m0.3_control_f{f:03d}_{(f - 1) / FPS:04.1f}s.png")
+        s.render.filepath = os.path.join(os.path.abspath(out_dir), f"m0.4_control_f{f:03d}_{(f - 1) / FPS:04.1f}s.png")
         t = time.time()
         bpy.ops.render.render(write_still=True)
         print(f"[NOC] control frame {f}: {time.time() - t:.1f}s")
@@ -258,7 +435,12 @@ def main():
     attach_generator_state()
     polish()
     cam = build_camera()
-    validate(cam)
+    report = validate(cam)
+    if args.report:
+        import json
+        os.makedirs(os.path.dirname(os.path.abspath(args.report)), exist_ok=True)
+        with open(args.report, "w") as fh:
+            json.dump(report, fh, ensure_ascii=False, indent=1)
     if args.save:
         s = bpy.context.scene
         s.render.resolution_percentage = 100
