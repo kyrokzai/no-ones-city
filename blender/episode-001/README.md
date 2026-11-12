@@ -247,6 +247,17 @@ python build_district.py --save ../scenes/noc_ep001_district.blend          # р
 python animate_camera.py --save ../scenes/noc_ep001_district.blend          # доработки + камера M0.4
 ```
 
+## M0.6 — First Resident
+
+В городскую сцену добавлен дом первого жителя — **Founder Residence 001**, участок NOC-001 на первой береговой линии. Генератор, отдельная сцена и описание лежат в `blender/residents/001_zhanabaev/`.
+
+Порядок полной пересборки города:
+1. `build_district.py --save ...`
+2. `animate_camera.py --save ...`
+3. `../../residents/001_zhanabaev/build_residence.py --save ...`
+
+Пролёт M0.4 перепроверен на сцене с домом: 0 замечаний.
+
 ## Следующие шаги (не сделано в M0.1)
 
 - Анимация пролёта камеры для Reels: пока не рендерилась.

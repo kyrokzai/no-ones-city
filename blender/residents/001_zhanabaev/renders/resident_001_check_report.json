@@ -1,0 +1,66 @@
+{
+ "intersections_with_city": [],
+ "estate_max_y": 36.19,
+ "promenade_clear": true,
+ "house_bbox": [
+  [
+   47.2,
+   12.4,
+   0.1
+  ],
+  [
+   72.7,
+   28.5,
+   7.7
+  ]
+ ],
+ "neighbour_avg_footprint_m2": 95.8,
+ "neighbour_max_height_m": 6.7,
+ "house_footprint_m2": 408.2,
+ "house_height_m": 7.6,
+ "cameras": {
+  "Resident001_Front": {
+   "estate_share": 0.35,
+   "near_city_occluder_share": 0.0
+  },
+  "Resident001_Waterfront": {
+   "estate_share": 0.31,
+   "near_city_occluder_share": 0.003
+  },
+  "Resident001_Left": {
+   "estate_share": 0.31,
+   "near_city_occluder_share": 0.0
+  },
+  "Resident001_Right": {
+   "estate_share": 0.33,
+   "near_city_occluder_share": 0.0
+  },
+  "Resident001_Aerial": {
+   "estate_share": 0.41,
+   "near_city_occluder_share": 0.0
+  },
+  "Resident001_Sign": {
+   "estate_share": 0.56,
+   "near_city_occluder_share": 0.042
+  }
+ },
+ "sign_line_of_sight": true,
+ "visible_from_waterfront_spots": "5/5",
+ "city_cameras": {
+  "Cam_Cinematic": true,
+  "Cam_Reels": true
+ },
+ "cinematic_keyframes": 8,
+ "tree_crowns": 289,
+ "non_green_crowns": [],
+ "trees_removed_from_plot": [
+  "T_edge_1",
+  "T_edge_11",
+  "T_edge_17",
+  "T_edge_25",
+  "T_edge_30",
+  "T_edge_32",
+  "T_edge_37"
+ ],
+ "plot_conflicts": []
+}
