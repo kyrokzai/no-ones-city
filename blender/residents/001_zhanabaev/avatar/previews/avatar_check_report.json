@@ -1,0 +1,92 @@
+{
+ "model": {
+  "missing_parts": [],
+  "mesh_parts": 85,
+  "bones": [
+   "Root",
+   "Pelvis",
+   "Spine",
+   "Chest",
+   "Neck",
+   "Head",
+   "Shoulder.L",
+   "UpperArm.L",
+   "Forearm.L",
+   "Hand.L",
+   "Shoulder.R",
+   "UpperArm.R",
+   "Forearm.R",
+   "Hand.R",
+   "Thigh.L",
+   "Shin.L",
+   "Foot.L",
+   "Thigh.R",
+   "Shin.R",
+   "Foot.R"
+  ],
+  "all_parts_rigged": true,
+  "height_m": 1.766,
+  "feet_min_z_local": 0.0024,
+  "glasses_vertices_inside_head": 0,
+  "glasses_min_clearance_mm": 0.7,
+  "hair_vertices_inside_head": 0,
+  "trouser_waist_poking_through_shirt": 0,
+  "trouser_legs_poking_through_shirt": 0,
+  "forearm_skin_poking_through_sleeves": 0,
+  "max_edge_stretch_by_pose": {
+   "test_arms": [
+    1.83,
+    "sleeve_L"
+   ],
+   "test_head_legs": [
+    3.21,
+    "trousers_seat"
+   ],
+   "relaxed": [
+    1.12,
+    "sleeve_L"
+   ]
+  },
+  "missing_images": []
+ },
+ "city": {
+  "feet_min_z": 0.1324,
+  "ground_under_feet": [
+   [
+    0.13,
+    "RES001_Forecourt"
+   ],
+   [
+    0.13,
+    "RES001_Forecourt"
+   ]
+  ],
+  "feet_gap_mm": [
+   2.4,
+   2.4
+  ],
+  "clashes": [],
+  "distance_to_sign_m": 4.32,
+  "door_height_m": 2.9,
+  "objects_removed_from_city": [],
+  "residence_objects": 426,
+  "cameras_present": {
+   "Cam_Cinematic": true,
+   "Cam_Reels": true,
+   "Resident001_Front": true,
+   "Resident001_Waterfront": true,
+   "Resident001_Left": true,
+   "Resident001_Right": true,
+   "Resident001_Aerial": true,
+   "Resident001_Sign": true,
+   "Resident001_Orbit": true
+  },
+  "face_visible_from_AtResidence": true,
+  "avatar_world_location": [
+   58.3,
+   9.2,
+   0.13
+  ],
+  "missing_images": []
+ }
+}

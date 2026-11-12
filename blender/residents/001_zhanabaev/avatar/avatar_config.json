@@ -1,0 +1,33 @@
+{
+  "id": "#001",
+  "display_name": "RESIDENT #001 — ZHANABAEV",
+  "instagram": "@zhanabaev.d.d",
+  "plot_id": "NOC-001",
+  "reference": "approved NO ONE'S CITY character card (front / side / back turnaround + details); not stored in the repository",
+  "height": 1.745,
+  "build": {"shoulder_width": 0.41, "chest": 1.03, "waist": 1.02, "hips": 1.0, "arm_thickness": 1.12, "leg_thickness": 1.06},
+  "skin": {"tone": "#b07646", "lip": "#a8644a", "blush": "#c27a56"},
+  "face": {
+    "head_width": 1.2, "head_height": 1.02, "head_depth": 1.0,
+    "jaw_width": 1.55, "jaw_drop": 1.0, "chin_forward": 0.4, "cheek_fullness": 1.7,
+    "brow_thickness": 1.35, "brow_angle_deg": 4.0, "nose_size": 1.0, "smile": 1.0,
+    "eye_color": "#2e1d12"
+  },
+  "hair": {"style": "short_textured_fade", "color": "#121010", "fade_color": "#1b1715", "top_height": 0.5, "spikiness": 0.55},
+  "brows": {"color": "#120d0b"},
+  "glasses": {"style": "rect_fullrim", "frame_color": "#d6a84c", "lens_color": "#5c3b1e", "lens_tint": 0.45},
+  "outfit": {
+    "shirt": {"style": "open_collar_rolled", "color": "#f3f1ee", "button_color": "#e4e0d8"},
+    "trousers": {"style": "slim", "color": "#25272c"},
+    "shoes": {"style": "sneaker", "color": "#f5f4f1", "sole_color": "#e3e1dc"}
+  },
+  "accessories": [{"type": "watch", "side": "L", "case_color": "#babdc1", "dial_color": "#1c1e23"}],
+  "placement": {
+    "scene": "blender/episode-001/scenes/noc_ep001_district.blend",
+    "anchor": "RES001_Root",
+    "local_offset": [-2.2, -11.6, 0.13],
+    "rotation_z_deg": 0.0,
+    "pose": "relaxed",
+    "note": "on the forecourt pavers of Founder Residence 001, beside the FOUNDER #001 sign and the entry walk, facing Cross Street"
+  }
+}
