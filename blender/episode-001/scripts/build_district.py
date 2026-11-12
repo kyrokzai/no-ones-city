@@ -1,4 +1,4 @@
-"""NO ONE'S CITY — Episode 001 / M0.1: first low-poly district.
+"""NO ONE'S CITY — Episode 001 / M0.2: first low-poly district (visual polish).
 
 Builds a small modern district procedurally (12 houses, 4 free plots, roads,
 sidewalks, central plaza with fountain, trees, street lamps, lake, skyline)
@@ -136,26 +136,45 @@ def blob(name, r, loc, material, collection, scale=(1, 1, 1), jitter=0.12, paren
 def build_materials():
     mat("grass", "#4f6a34", 0.9)
     mat("grass_lawn", "#5d7a35", 0.85)
-    mat("asphalt", "#262a36", 0.8)
+    mat("asphalt", "#383e4f", 0.75)
+    mat("asphalt_x", "#41475a", 0.72)
+    mat("curb", "#d9cdb8", 0.7)
     mat("marking", "#e8c37a", 0.6)
     mat("sidewalk", "#b9a58c", 0.75)
     mat("plaza", "#d8c3a2", 0.65)
     mat("plaza_dark", "#8a7660", 0.7)
+    mat("paving_ring", "#c2a582", 0.7)
+    mat("bollard", "#ffd9a0", 0.3, emit="#ffbf6a", strength=10.0)
+    mat("deck", "#8f5e3d", 0.7)
+    mat("rail_glow", "#ffcf80", 0.3, emit="#ffb85c", strength=8.0)
     mat("gold_glow", "#f5b04a", 0.4, emit="#ffb347", strength=6.0)
-    mat("water", "#1b3150", 0.04, spec=0.8)
+    mat("water", "#14284a", 0.03, spec=0.9)
     mat("fountain_water", "#6fb6e6", 0.05, emit="#7cc8ff", strength=1.5)
     mat("trunk", "#5a3d2b", 0.9)
     for i, c in enumerate(["#4d7a32", "#5f8c3a", "#3f6b30", "#6e9640"]):
         mat(f"leaf_{i}", c, 0.85)
     mat("leaf_pink", "#e89ab4", 0.8)
+    mat("blossom", "#f59ac0", 0.8)
+    mat("blossom_light", "#ffc4da", 0.8)
+    mat("shrub", "#4f7d3a", 0.9)
+    mat("shrub_dark", "#36602f", 0.9)
+    mat("soil", "#4a3426", 0.95)
+    for n, c in (("pink", "#ff7fae"), ("yellow", "#ffd25a"), ("white", "#fff3e6"), ("coral", "#ff8a62"), ("violet", "#b48cff")):
+        mat(f"flower_{n}", c, 0.7)
     mat("leaf_gold", "#d9a441", 0.8)
     mat("hedge", "#3c6630", 0.9)
-    for i, c in enumerate(["#efe6d8", "#e4ddd2", "#d9cdbb", "#f3eee6", "#cfc6b8"]):
-        mat(f"wall_{i}", c, 0.7)
+    for n, c in (("white", "#f4f0e8"), ("sand", "#dcc6a2"), ("grey", "#c3c6ca"),
+                 ("blush", "#e9cfc3"), ("cream", "#efe4cf")):
+        mat(f"wall_{n}", c, 0.7)
+    mat("clad_dark", "#3a3d47", 0.6)
+    mat("clad_wood", "#a8714a", 0.55)
+    mat("roof_metal", "#4b4f5a", 0.45, metallic=0.3)
+    mat("mullion", "#23252c", 0.5)
     mat("wood", "#9a6440", 0.6)
     mat("charcoal", "#2c2f38", 0.6)
     mat("roof", "#3a3d47", 0.7)
-    mat("window", "#ffcf8a", 0.2, emit="#ffbe6b", strength=4.0)
+    mat("window", "#ffb860", 0.2, emit="#ffa94d", strength=5.5)
+    mat("window_soft", "#ffd6a0", 0.2, emit="#ffc98a", strength=3.0)
     mat("window_cool", "#bcd6ff", 0.15, emit="#9ec3ff", strength=1.2)
     mat("glass", "#86a6c4", 0.08, spec=0.9)
     mat("concrete", "#a39c92", 0.8)
@@ -163,7 +182,7 @@ def build_materials():
     mat("lamp", "#ffd9a0", 0.3, emit="#ffc977", strength=20.0)
     mat("mountain_far", "#b07a9a", 0.95)
     mat("mountain_near", "#6e4f7e", 0.95)
-    mat("sun_disc", "#ffb24a", 0.5, emit="#ffa63d", strength=7.0)
+    mat("sun_disc", "#ff9426", 0.5, emit="#ff7f1a", strength=2.2)
     # skyline material: navy glass with a lit window grid
     m = bpy.data.materials.new("tower_lit")
     m.use_nodes = True
@@ -191,7 +210,7 @@ def build_materials():
     nt.links.new(sep.outputs["Z"], comb.inputs["Y"])
     nt.links.new(comb.outputs["Vector"], brick.inputs["Vector"])
     nt.links.new(brick.outputs["Color"], b.inputs["Emission Color"])
-    b.inputs["Emission Strength"].default_value = 1.1
+    b.inputs["Emission Strength"].default_value = 0.9
     MATS["tower_lit"] = m
 
 
@@ -213,8 +232,9 @@ def build_world():
     out = nt.nodes.new("ShaderNodeOutputWorld")
     cr = ramp.color_ramp
     cr.interpolation = "EASE"
-    stops = [(0.0, "#ffb85a"), (0.04, "#ffa060"), (0.1, "#f08a8c"), (0.17, "#c870a6"),
-             (0.26, "#5b3f7a"), (0.5, "#1c2350"), (1.0, "#0a1028")]
+    # gold horizon -> coral -> soft pink -> violet -> deep navy zenith
+    stops = [(0.0, "#ffad48"), (0.02, "#ff9450"), (0.045, "#f2807f"), (0.075, "#d06c9c"),
+             (0.11, "#7a4a98"), (0.16, "#323a86"), (0.24, "#18225e"), (0.5, "#0b1340"), (1.0, "#050a22")]
     cr.elements[0].position, cr.elements[0].color = stops[0][0], (*srgb(stops[0][1]), 1)
     cr.elements[1].position, cr.elements[1].color = stops[-1][0], (*srgb(stops[-1][1]), 1)
     for pos, col in stops[1:-1]:
@@ -223,18 +243,18 @@ def build_world():
     nt.links.new(tc.outputs["Generated"], sep.inputs["Vector"])
     nt.links.new(sep.outputs["Z"], ramp.inputs["Fac"])
     nt.links.new(ramp.outputs["Color"], bg.inputs["Color"])
-    bg.inputs["Strength"].default_value = 1.5
+    bg.inputs["Strength"].default_value = 1.35
     nt.links.new(bg.outputs["Background"], out.inputs["Surface"])
 
 
-SUN_POS = Vector((215, 900, 105))
+SUN_POS = Vector((190, 900, 88))
 
 
 def build_lights():
     c = coll("Lights")
     sun = bpy.data.lights.new("Sun_Golden", "SUN")
-    sun.color = srgb("#ffb070")
-    sun.energy = 6.0
+    sun.color = srgb("#ffa24a")
+    sun.energy = 7.0
     sun.angle = math.radians(3)
     ob = bpy.data.objects.new("Sun_Golden", sun)
     c.objects.link(ob)
@@ -243,7 +263,7 @@ def build_lights():
     # cool rim / fill from the opposite side (navy sky bounce)
     fill = bpy.data.lights.new("Fill_Navy", "SUN")
     fill.color = srgb("#6f86d6")
-    fill.energy = 0.35
+    fill.energy = 0.5
     fill.angle = math.radians(20)
     ob = bpy.data.objects.new("Fill_Navy", fill)
     c.objects.link(ob)
@@ -275,11 +295,55 @@ WALK_H = 0.18
 def build_ground_and_water():
     c = coll("Ground")
     box("Ground", (700, 360, 0.1), (0, -140, -0.1), M("grass"), c)
-    # lake + quay
+    # lawn fill for the four residential blocks (lower than sidewalks: no coplanar faces)
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            y0, y1 = (5.7, 25.8) if sy > 0 else (-24.3, -5.7)
+            box(f"BlockLawn_{sx}_{sy}", (22.1, y1 - y0, WALK_H - 0.04),
+                (sx * 17.25, (y0 + y1) / 2, 0), M("grass_lawn"), c)
+    # lake
     box("Lake", (1200, 1200, 0.05), (0, 640, -0.9), M("water"), c)
-    box("Quay_Wall", (700, 1.2, 1.05), (0, 40.6, -0.9), M("concrete"), c)
-    box("Promenade", (700, 6, WALK_H), (0, 37, 0), M("sidewalk"), c)
-    box("Promenade_Glow", (700, 0.12, 0.05), (0, 40.0, WALK_H), M("gold_glow"), c)
+    build_waterfront()
+
+
+def build_waterfront():
+    """Stone promenade + wooden boardwalk, glowing railing, planters, benches and a pier."""
+    c = coll("Waterfront")
+    box("Promenade", (700, 2.6, WALK_H), (0, 37.5, 0), M("sidewalk"), c)          # y 36.2..38.8
+    box("Boardwalk", (700, 3.4, WALK_H + 0.04), (0, 40.5, 0), M("deck"), c)       # y 38.8..42.2
+    box("Quay_Wall", (700, 0.8, 1.15), (0, 42.6, -0.95), M("concrete"), c)
+    box("Quay_Step", (700, 1.2, 0.5), (0, 43.4, -0.95), M("concrete"), c)
+    # railing: posts with warm caps + top rail
+    box("Rail_Top", (220, 0.1, 0.08), (0, 42.0, 1.1), M("charcoal"), c)
+    for i, x in enumerate(range(-108, 109, 3)):
+        box(f"Rail_Post_{i}", (0.1, 0.1, 0.9), (x, 42.0, WALK_H + 0.04), M("charcoal"), c)
+        if i % 2 == 0:
+            box(f"Rail_Cap_{i}", (0.16, 0.16, 0.1), (x, 42.0, 1.18), M("rail_glow"), c)
+    # planters with cherry trees and benches facing the lake
+    for i, x in enumerate(range(-45, 46, 10)):
+        if abs(x) < 6:
+            continue
+        box(f"Planter_{i}", (2.6, 1.4, 0.55), (x, 37.4, WALK_H), M("concrete"), c)
+        box(f"Planter_{i}_soil", (2.4, 1.2, 0.05), (x, 37.4, WALK_H + 0.52), M("soil"), c)
+        cherry(f"Prom_Cherry_{i}", (x, 37.4, WALK_H + 0.55), size=0.85)
+        for k in range(3):
+            shrub(f"Planter_{i}_sh{k}", (x - 0.8 + k * 0.8, 36.9, WALK_H + 0.55), 0.35)
+        box(f"Prom_Bench_{i}", (1.8, 0.55, 0.45), (x + 4.5, 40.0, WALK_H + 0.04), M("wood"), c)
+    # pier with a modern flat-roof pavilion
+    px = -9
+    box("Pier", (5, 22, 0.35), (px, 53, -0.2), M("deck"), c)
+    for k in range(6):
+        for sx in (-1, 1):
+            cyl(f"Pier_Pile_{k}_{sx}", 0.18, 0.18, 1.2, 6, (px + sx * 2.2, 44 + k * 4, -1.0), M("charcoal"), c)
+    for k in range(5):
+        box(f"Pier_Light_{k}", (0.2, 0.2, 0.5), (px + 2.3, 45 + k * 4.5, 0.15), M("bollard"), c)
+        box(f"Pier_LightL_{k}", (0.2, 0.2, 0.5), (px - 2.3, 45 + k * 4.5, 0.15), M("bollard"), c)
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            box(f"Pavilion_Post_{sx}_{sy}", (0.18, 0.18, 2.8), (px + sx * 2.0, 60 + sy * 2.0, 0.15), M("charcoal"), c)
+    box("Pavilion_Roof", (5.6, 5.6, 0.25), (px, 60, 2.95), M("clad_wood"), c)
+    box("Pavilion_RoofGlow", (5.0, 5.0, 0.05), (px, 60, 2.9), M("window_soft"), c)
+    point_light("Pavilion_Light", (px, 60, 2.4), energy=180, radius=0.6)
 
 
 def _segments(lo, hi, gaps):
@@ -311,8 +375,8 @@ def road(name, length, width, loc, along_x, c, gaps=()):
                 box(f"{name}_walk{k}_{side}", (ln, 2.2, WALK_H), (mid, loc[1] + side * off, 0), M("sidewalk"), c)
             else:
                 box(f"{name}_walk{k}_{side}", (2.2, ln, WALK_H), (loc[0] + side * off, mid, 0), M("sidewalk"), c)
-        t = a + 2.5
-        while t + 2.2 < b - 1.5:
+        t = a + 3.0
+        while t + 2.2 < b - 2.5:
             p = (t + 1.1, loc[1], ROAD_Z) if along_x else (loc[0], t + 1.1, ROAD_Z)
             sz = (2.2, 0.18, 0.01) if along_x else (0.18, 2.2, 0.01)
             box(f"{name}_dash{k}_{int(t)}", sz, p, M("marking"), c)
@@ -320,42 +384,91 @@ def road(name, length, width, loc, along_x, c, gaps=()):
         k += 1
 
 
+def junction(name, x, y, wx, wy, c, zebras=()):
+    """Raised junction slab over the overlap of two roads (removes coplanar black artifacts).
+    zebras: sides ('n','s','e','w') that get a pedestrian crossing."""
+    box(name, (wx, wy, ROAD_Z + 0.016), (x, y, -0.005), M("asphalt_x"), c)
+    zt = ROAD_Z + 0.011
+    for side in zebras:
+        for i in range(7):
+            if side in "ns":
+                yy = y + (wy / 2 + 1.6) * (1 if side == "n" else -1)
+                box(f"{name}_zebra_{side}{i}", (0.55, 2.4, 0.01), (x - wx / 2 + 0.9 + i * (wx - 1.8) / 6, yy, zt), M("curb"), c)
+            else:
+                xx = x + (wx / 2 + 1.6) * (1 if side == "e" else -1)
+                box(f"{name}_zebra_{side}{i}", (2.4, 0.55, 0.01), (xx, y - wy / 2 + 0.8 + i * (wy - 1.6) / 6, zt), M("curb"), c)
+
+
 def build_roads():
     c = coll("Roads")
-    # main N-S avenue into the plaza, ends at the lake street (T-junction)
-    road("Avenue", 112, 8, (0, -28), False, c, gaps=[(-30, 7), (0, 7)])
+    # N-S roads stop their sidewalks at the outer edge of crossing sidewalks (width + 2 x 2.2),
+    # E-W sidewalks run on, so sidewalk boxes never overlap.
+    road("Avenue", 112, 8, (0, -28), False, c, gaps=[(-30, 11.4), (0, 11.4)])
     road("CrossSt", 140, 7, (0, 0), True, c, gaps=[(-34, 7), (0, 8), (34, 7)])
     road("FrontSt", 160, 7, (0, -30), True, c, gaps=[(-34, 7), (0, 8), (34, 7)])
     road("LakeSt", 90, 6, (0, 31), True, c, gaps=[(-34, 7), (0, 8), (34, 7)])
-    road("WestSt", 61, 7, (-34, 0), False, c, gaps=[(-30, 7), (0, 7), (31, 6)])
-    road("EastSt", 61, 7, (34, 0), False, c, gaps=[(-30, 7), (0, 7), (31, 6)])
-    # zebra crossing on the hero intersection (avenue x front street)
-    for i in range(7):
-        box(f"Zebra_{i}", (0.6, 2.6, 0.01), (-3 + i, -25.0, ROAD_Z), M("plaza"), c)
+    road("WestSt", 61, 7, (-34, 0), False, c, gaps=[(-30, 11.4), (0, 11.4), (31, 10.4)])
+    road("EastSt", 61, 7, (34, 0), False, c, gaps=[(-30, 11.4), (0, 11.4), (31, 10.4)])
+    junction("Junction_Hero", 0, -30, 8, 7, c, zebras="nsew")
+    junction("Junction_Lake", 0, 31, 8, 6, c, zebras="s")
+    for x in (-34, 34):
+        junction(f"Junction_{x}_front", x, -30, 7, 7, c, zebras="n")
+        junction(f"Junction_{x}_cross", x, 0, 7, 7, c)
+        junction(f"Junction_{x}_lake", x, 31, 7, 6, c)
 
 
 def build_plaza():
     c = coll("Plaza")
-    cyl("Plaza_Base", 10.5, 10.5, 0.24, 40, (0, 0, 0), M("plaza_dark"), c)
-    cyl("Plaza_Top", 10.0, 10.0, 0.27, 40, (0, 0, 0), M("plaza"), c)
-    cyl("Plaza_GoldRing", 6.6, 6.6, 0.29, 40, (0, 0, 0), M("gold_glow"), c)
-    cyl("Plaza_Inner", 6.35, 6.35, 0.30, 40, (0, 0, 0), M("plaza"), c)
-    # fountain
-    cyl("Fountain_Base", 3.2, 3.2, 0.75, 16, (0, 0, 0.3), M("plaza_dark"), c)
-    cyl("Fountain_Water", 2.85, 2.85, 0.78, 16, (0, 0, 0.3), M("fountain_water"), c)
+    cyl("Plaza_Base", 10.6, 10.6, 0.24, 48, (0, 0, 0), M("plaza_dark"), c)
+    cyl("Plaza_Top", 10.2, 10.2, 0.27, 48, (0, 0, 0), M("plaza"), c)
+    cyl("Plaza_RingPave", 9.0, 9.0, 0.28, 48, (0, 0, 0), M("paving_ring"), c)
+    cyl("Plaza_Mid", 8.6, 8.6, 0.29, 48, (0, 0, 0), M("plaza"), c)
+    cyl("Plaza_GoldRing", 6.7, 6.7, 0.30, 48, (0, 0, 0), M("gold_glow"), c)
+    cyl("Plaza_Inner", 6.45, 6.45, 0.31, 48, (0, 0, 0), M("paving_ring"), c)
+    cyl("Plaza_InnerTop", 5.6, 5.6, 0.32, 48, (0, 0, 0), M("plaza"), c)
+    for i in range(16):  # radial paving joints
+        a = i * math.pi / 8
+        box(f"Plaza_Joint_{i}", (3.3, 0.12, 0.01), (math.cos(a) * 8.5, math.sin(a) * 8.5, 0.29), M("plaza_dark"), c, rot_z=a)
+    # flower ring around the fountain
+    cyl("Fountain_Bed", 4.4, 4.4, 0.5, 24, (0, 0, 0.3), M("soil"), c)
+    flowers = ["flower_pink", "flower_yellow", "flower_white", "flower_coral", "flower_violet"]
+    for i in range(30):
+        a = i * 2 * math.pi / 30 + random.uniform(-0.05, 0.05)
+        r = random.uniform(3.5, 4.15)
+        blob(f"Fountain_Flower_{i}", 0.22, (math.cos(a) * r, math.sin(a) * r, 0.85),
+             M(flowers[i % len(flowers)]), c, scale=(1, 1, 0.8))
+    # fountain: two tiers
+    cyl("Fountain_Base", 3.2, 3.2, 0.8, 16, (0, 0, 0.3), M("plaza_dark"), c)
+    cyl("Fountain_Water", 2.85, 2.85, 0.83, 16, (0, 0, 0.3), M("fountain_water"), c)
     cyl("Fountain_Column", 0.5, 0.4, 1.9, 8, (0, 0, 0.3), M("plaza"), c)
-    cyl("Fountain_Bowl", 0.6, 1.3, 0.35, 12, (0, 0, 2.1), M("plaza"), c)
-    cyl("Fountain_BowlWater", 1.15, 1.15, 0.37, 12, (0, 0, 2.1), M("fountain_water"), c)
-    cyl("Fountain_Jet", 0.35, 0.05, 1.6, 6, (0, 0, 2.4), M("fountain_water"), c)
-    point_light("Fountain_Glow", (0, 0, 1.6), "#8fd0ff", 250, 1.0)
-    # benches and lamps around the plaza
+    cyl("Fountain_Bowl", 0.6, 1.4, 0.35, 12, (0, 0, 2.1), M("plaza"), c)
+    cyl("Fountain_BowlWater", 1.25, 1.25, 0.37, 12, (0, 0, 2.1), M("fountain_water"), c)
+    cyl("Fountain_Jet", 0.35, 0.05, 1.7, 6, (0, 0, 2.4), M("fountain_water"), c)
+    point_light("Fountain_Glow", (0, 0, 1.7), "#8fd0ff", 300, 1.0)
+    # benches facing the fountain
     for i in range(8):
         a = i * math.pi / 4 + math.pi / 8
-        x, y = math.cos(a) * 8.2, math.sin(a) * 8.2
-        box(f"Bench_{i}", (2.0, 0.6, 0.45), (x, y, 0.3), M("wood"), c, rot_z=a + math.pi / 2)
+        x, y = math.cos(a) * 7.6, math.sin(a) * 7.6
+        box(f"Bench_{i}", (2.0, 0.6, 0.42), (x, y, 0.32), M("wood"), c, rot_z=a + math.pi / 2)
+        bx, by = math.cos(a) * 7.95, math.sin(a) * 7.95
+        box(f"Bench_{i}_back", (2.0, 0.12, 0.5), (bx, by, 0.74), M("wood"), c, rot_z=a + math.pi / 2)
+    # four planters with cherry trees
     for i in range(4):
         a = i * math.pi / 2 + math.pi / 4
-        lamp(f"PlazaLamp_{i}", (math.cos(a) * 9.4, math.sin(a) * 9.4, 0.27), light=True)
+        x, y = math.cos(a) * 8.6, math.sin(a) * 8.6
+        cyl(f"Plaza_Planter_{i}", 1.25, 1.25, 0.6, 12, (x, y, 0.3), M("concrete"), c)
+        cyl(f"Plaza_Planter_{i}_soil", 1.1, 1.1, 0.62, 12, (x, y, 0.3), M("soil"), c)
+        cherry(f"Plaza_Cherry_{i}", (x, y, 0.9), size=0.95)
+        for k in range(4):
+            b = k * math.pi / 2
+            shrub(f"Plaza_Planter_{i}_sh{k}", (x + math.cos(b) * 0.8, y + math.sin(b) * 0.8, 0.9), 0.3)
+    # bollard lights on the paving ring + lamps at the plaza edge
+    for i in range(12):
+        a = i * math.pi / 6
+        cyl(f"Bollard_{i}", 0.13, 0.13, 0.6, 8, (math.cos(a) * 9.6, math.sin(a) * 9.6, 0.27), M("bollard"), c)
+    for i in range(4):
+        a = i * math.pi / 2 + math.pi / 4 + 0.32
+        lamp(f"PlazaLamp_{i}", (math.cos(a) * 9.9, math.sin(a) * 9.9, 0.27), light=True)
 
 
 def lamp(name, loc, light=False):
@@ -396,21 +509,59 @@ def tree(name, loc, kind=None, size=1.0, c=None):
             blob(f"{name}_crown2", r * 0.6, (x + r * 0.5, y, z + h + r * 1.2), M(kind), c)
 
 
+def cherry(name, loc, size=1.0, c=None):
+    """Blossoming cherry: short trunk, wide cluster of pink lobes."""
+    c = c or coll("Trees")
+    x, y, z = loc
+    h = 1.5 * size
+    cyl(f"{name}_trunk", 0.2 * size, 0.13 * size, h, 6, (x, y, z), M("trunk"), c)
+    for k in range(4):
+        a = k * math.pi / 2 + random.uniform(0, 0.6)
+        r = random.uniform(0.9, 1.25) * size
+        off = 0.0 if k == 0 else 0.85 * size
+        blob(f"{name}_lobe{k}", r, (x + math.cos(a) * off, y + math.sin(a) * off, z + h + r * 0.55 + (0.4 * size if k == 0 else 0)),
+             M("blossom" if k % 2 == 0 else "blossom_light"), c, scale=(1, 1, 0.8))
+
+
+def shrub(name, loc, r=0.5, c=None):
+    c = c or coll("Trees")
+    return blob(name, r, (loc[0], loc[1], loc[2] + r * 0.45), M(random.choice(["shrub", "shrub_dark"])), c,
+                scale=(1.15, 1, 0.75), jitter=0.15)
+
+
+def flowerbed(name, loc, w, d, c, rot_z=0.0, parent=None):
+    """Raised soil bed with a few low-poly flower clusters (local to `parent` when given)."""
+    box(f"{name}_edge", (w, d, 0.28), loc, M("curb"), c, rot_z=rot_z, parent=parent)
+    box(f"{name}_soil", (w - 0.2, d - 0.2, 0.3), loc, M("soil"), c, rot_z=rot_z, parent=parent)
+    colors = ["flower_pink", "flower_yellow", "flower_white", "flower_coral", "flower_violet"]
+    n = max(3, int(w * d * 1.4))
+    for i in range(n):
+        fx = loc[0] + random.uniform(-w / 2 + 0.25, w / 2 - 0.25)
+        fy = loc[1] + random.uniform(-d / 2 + 0.25, d / 2 - 0.25)
+        b = blob(f"{name}_f{i}", 0.2, (fx, fy, loc[2] + 0.38), M(random.choice(colors)), c, scale=(1, 1, 0.8))
+        if parent:
+            b.parent = parent
+
+
 # --------------------------------------------------------------------------- houses & plots
 
-WALLS = ["wall_0", "wall_1", "wall_2", "wall_3", "wall_4"]
+PALETTES = [  # (main wall, accent cladding)
+    ("wall_white", "clad_wood"), ("wall_sand", "clad_dark"), ("clad_dark", "clad_wood"),
+    ("wall_grey", "clad_wood"), ("wall_blush", "clad_dark"), ("wall_cream", "clad_dark"),
+]
+STYLE_NAMES = ["cantilever", "monopitch", "pavilion", "gable", "stacked"]
 
 
-def windows(parent, w, d, z0, h, c, tag, step=1.9):
-    """Glowing window panes on all four facades of a w x d volume."""
+def windows(parent, w, d, z0, h, c, tag, step=1.9, front=True):
+    """Glowing window panes on the facades of a w x d volume (front = -Y)."""
     n = max(1, int(w // step))
     for i in range(n):
         x = -w / 2 + (i + 0.5) * w / n
-        for side in (-1, 1):
+        for side in ((-1, 1) if front else (1,)):
             if random.random() < 0.15:
                 continue
-            m = M("window") if random.random() < 0.8 else M("window_cool")
-            box(f"{tag}_win_{i}_{side}", (w / n * 0.62, 0.08, h), (x, side * d / 2, z0), m, c, parent=parent)
+            m = M("window") if random.random() < 0.75 else M("window_soft")
+            box(f"{tag}_win_{i}_{side}", (w / n * 0.6, 0.08, h), (x, side * d / 2, z0), m, c, parent=parent)
     nd = max(1, int(d // step))
     for i in range(nd):
         y = -d / 2 + (i + 0.5) * d / nd
@@ -420,65 +571,178 @@ def windows(parent, w, d, z0, h, c, tag, step=1.9):
             box(f"{tag}_swin_{i}_{side}", (0.08, d / nd * 0.55, h), (side * w / 2, y, z0), M("window"), c, parent=parent)
 
 
-def house(idx, x, y, face_south, style):
-    c = coll("Houses")
-    tag = f"House_{idx:02d}"
-    root = bpy.data.objects.new(tag, None)
-    c.objects.link(root)
-    root.location = (x, y, WALK_H)
-    root.rotation_euler.z = 0 if face_south else math.pi
-    wall = M(WALLS[idx % len(WALLS)])
-
-    # lot: lawn, driveway, hedges
-    box(f"{tag}_lawn", (10.2, 8.4, 0.06), (0, 0, -0.04), M("grass_lawn"), c, parent=root)
-    box(f"{tag}_drive", (2.6, 2.6, 0.08), (3.6, -2.9, -0.04), M("concrete"), c, parent=root)
-    box(f"{tag}_path", (1.2, 1.6, 0.08), (-0.4, -3.4, -0.04), M("sidewalk"), c, parent=root)
-    box(f"{tag}_hedge_back", (10.0, 0.5, 0.75), (0, 3.95, 0), M("hedge"), c, parent=root)
-
-    W = random.uniform(6.6, 7.6)
-    D = random.uniform(5.0, 5.8)
-    gy = 0.6
-    box(f"{tag}_ground", (W, D, 3.1), (0, gy, 0), wall, c, parent=root)
-    # ground-floor windows (front & back) + sides
-    _win_group(root, W, D, gy, 0.6, 1.9, c, f"{tag}_g")
-    box(f"{tag}_door", (1.05, 0.12, 2.2), (-0.4, gy - D / 2 - 0.02, 0), M("wood"), c, parent=root)
-    box(f"{tag}_canopy", (2.2, 1.2, 0.14), (-0.4, gy - D / 2 - 0.5, 2.55), M("charcoal"), c, parent=root)
-
-    if style == 0:      # cantilevered upper floor, flat roofs
-        uw, ud, ux = W * 0.68, D + 0.6, W * 0.2
-        box(f"{tag}_upper", (uw, ud, 2.9), (ux, gy - 0.3, 3.1), wall, c, parent=root)
-        _win_group(root, uw, ud, gy - 0.3, 3.6, 1.7, c, f"{tag}_u", xoff=ux)
-        box(f"{tag}_roof", (uw + 0.5, ud + 0.5, 0.28), (ux, gy - 0.3, 6.0), M("roof"), c, parent=root)
-        box(f"{tag}_roof_g", (W + 0.4, D + 0.4, 0.22), (0, gy, 3.1), M("charcoal"), c, parent=root)
-        box(f"{tag}_wood", (0.9, 0.1, 2.9), (ux + uw / 2 - 0.6, gy - 0.3 - ud / 2 - 0.06, 3.1), M("wood"), c, parent=root)
-    elif style == 1:    # full two storeys with mono-pitch roof and wood cladding
-        box(f"{tag}_upper", (W, D, 2.8), (0, gy, 3.1), wall, c, parent=root)
-        _win_group(root, W, D, gy, 3.6, 1.6, c, f"{tag}_u")
-        r = box(f"{tag}_roof", (W + 0.8, D + 0.9, 0.25), (0, gy, 6.15), M("roof"), c, parent=root)
-        r.rotation_euler.x = math.radians(9)
-        box(f"{tag}_wood", (W * 0.35, 0.1, 5.9), (-W / 2 + W * 0.175, gy - D / 2 - 0.06, 0), M("wood"), c, parent=root)
-    else:               # single storey + glass terrace box + side garage
-        box(f"{tag}_roof", (W + 0.6, D + 0.6, 0.25), (0, gy, 3.1), M("roof"), c, parent=root)
-        box(f"{tag}_studio", (W * 0.45, D * 0.6, 2.4), (-W * 0.2, gy + 0.6, 3.35), M("glass"), c, parent=root)
-        _win_group(root, W * 0.45, D * 0.6, gy + 0.6, 3.6, 1.8, c, f"{tag}_u", xoff=-W * 0.2, step=1.2)
-        box(f"{tag}_studio_roof", (W * 0.45 + 0.5, D * 0.6 + 0.5, 0.2), (-W * 0.2, gy + 0.6, 5.75), M("charcoal"), c, parent=root)
-        box(f"{tag}_rail", (W * 0.5, 0.06, 0.9), (W * 0.22, gy - D / 2 + 0.1, 3.35), M("glass"), c, parent=root)
-
-    # garage on the drive side
-    box(f"{tag}_garage", (3.0, 4.2, 2.6), (W / 2 + 1.3, gy + 0.2, 0), M("charcoal"), c, parent=root)
-    box(f"{tag}_garage_door", (2.4, 0.1, 2.1), (W / 2 + 1.3, gy + 0.2 - 2.12, 0), M("concrete"), c, parent=root)
-    # small yard tree + porch light
-    tree(f"{tag}_yardtree", (x - 4.2 if face_south else x + 4.2, y + (2.8 if face_south else -2.8), WALK_H),
-         size=0.8, c=coll("Trees"))
-    box(f"{tag}_porch", (0.25, 0.12, 0.25), (0.45, gy - D / 2 - 0.08, 2.1), M("lamp"), c, parent=root)
-
-
-def _win_group(root, w, d, cy, z0, h, c, tag, xoff=0.0, step=1.9):
+def _win_group(root, w, d, cy, z0, h, c, tag, xoff=0.0, step=1.9, front=True):
     g = bpy.data.objects.new(f"{tag}_windows", None)
     c.objects.link(g)
     g.parent = root
     g.location = (xoff, cy, 0)
-    windows(g, w + 0.02, d + 0.02, z0, h, c, tag, step)
+    windows(g, w + 0.02, d + 0.02, z0, h, c, tag, step, front)
+
+
+def panoramic(root, tag, c, x, yf, z0, w, h, n=3):
+    """Floor-to-ceiling glazing with dark frames on a facade at y = yf (front facing -Y)."""
+    box(f"{tag}_glass", (w, 0.08, h), (x, yf - 0.03, z0), M("window"), c, parent=root)
+    for i in range(n + 1):
+        mx = x - w / 2 + i * w / n
+        box(f"{tag}_mull{i}", (0.09, 0.14, h), (mx, yf - 0.06, z0), M("mullion"), c, parent=root)
+    box(f"{tag}_head", (w + 0.1, 0.14, 0.1), (x, yf - 0.06, z0 + h - 0.05), M("mullion"), c, parent=root)
+    box(f"{tag}_sill", (w + 0.1, 0.16, 0.08), (x, yf - 0.06, z0), M("mullion"), c, parent=root)
+
+
+def balcony(root, tag, c, x, yf, z, w, depth=1.2):
+    box(f"{tag}_slab", (w, depth, 0.18), (x, yf - depth / 2, z), M("charcoal"), c, parent=root)
+    box(f"{tag}_rail", (w, 0.05, 0.95), (x, yf - depth + 0.03, z + 0.18), M("glass"), c, parent=root)
+    box(f"{tag}_handrail", (w, 0.09, 0.06), (x, yf - depth + 0.03, z + 1.13), M("mullion"), c, parent=root)
+    for sx in (-1, 1):
+        box(f"{tag}_rail_s{sx}", (0.05, depth, 0.95), (x + sx * w / 2, yf - depth / 2, z + 0.18), M("glass"), c, parent=root)
+
+
+def fins(root, tag, c, x0, x1, yf, z0, h, n=5):
+    for i in range(n):
+        fx = x0 + (i + 0.5) * (x1 - x0) / n
+        box(f"{tag}_fin{i}", (0.12, 0.35, h), (fx, yf - 0.17, z0), M("clad_wood"), c, parent=root)
+
+
+def gable_body(name, w, d, hw, hr, loc, material, c, parent):
+    """Modern barn volume: pentagon prism with the ridge along Y (gable faces the street)."""
+    bm = bmesh.new()
+    prof = [(-w / 2, 0), (w / 2, 0), (w / 2, hw), (0, hw + hr), (-w / 2, hw)]
+    front = [bm.verts.new((px, -d / 2, pz)) for px, pz in prof]
+    back = [bm.verts.new((px, d / 2, pz)) for px, pz in prof]
+    bm.faces.new(front[::-1])
+    bm.faces.new(back)
+    for i in range(5):
+        j = (i + 1) % 5
+        bm.faces.new((front[i], front[j], back[j], back[i]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return mesh_obj(name, bm, material, c, loc, 0.0, parent)
+
+
+def gable_roof(tag, c, root, x, cy, w, d, hw, hr):
+    slope = math.atan2(hr, w / 2)
+    ln = math.hypot(w / 2, hr) + 0.45
+    for sx in (-1, 1):
+        r = box(f"{tag}_roof{sx}", (ln, d + 0.7, 0.2), (x + sx * w / 4, cy, hw + hr / 2 + 0.04), M("roof_metal"), c, parent=root)
+        r.rotation_euler.y = slope if sx > 0 else -slope
+
+
+def house(idx, x, y, face_south, style):
+    c = coll("Houses")
+    tag = f"House_{idx:02d}_{STYLE_NAMES[style]}"
+    root = bpy.data.objects.new(tag, None)
+    c.objects.link(root)
+    root.location = (x, y, WALK_H)
+    root.rotation_euler.z = 0 if face_south else math.pi
+    wall_name, accent_name = PALETTES[idx % len(PALETTES)]
+    wall, accent = M(wall_name), M(accent_name)
+
+    # lot: lawn, driveway, path, hedge, shrubs, flower bed
+    box(f"{tag}_lawn", (10.2, 8.4, 0.06), (0, 0, -0.04), M("grass_lawn"), c, parent=root)
+    box(f"{tag}_drive", (2.8, 2.7, 0.08), (3.9, -2.85, -0.04), M("concrete"), c, parent=root)
+    box(f"{tag}_path", (1.2, 1.6, 0.08), (-0.6, -3.4, -0.04), M("sidewalk"), c, parent=root)
+    box(f"{tag}_hedge_back", (10.0, 0.5, 0.75), (0, 3.95, 0), M("hedge"), c, parent=root)
+    flowerbed(f"{tag}_bed", (-3.2, -3.35, 0), 2.6, 0.9, c, parent=root)
+    for k in range(3):
+        sh = shrub(f"{tag}_shrub{k}", (-4.6 + k * 0.0, -2.2 + k * 1.3, 0), 0.45, c)
+        sh.parent = root
+
+    W = random.uniform(6.8, 7.6)
+    D = random.uniform(5.0, 5.6)
+    gy = 0.6
+    yf = gy - D / 2
+    garage = True
+
+    if style == 0:      # cantilever: white base, clad upper volume overhanging the front
+        box(f"{tag}_ground", (W, D, 3.1), (0, gy, 0), wall, c, parent=root)
+        panoramic(root, f"{tag}_gpano", c, -W * 0.12, yf, 0.3, W * 0.55, 2.45, 3)
+        _win_group(root, W, D, gy, 0.6, 1.9, c, f"{tag}_g", front=False)
+        box(f"{tag}_roof_g", (W + 0.3, D + 0.3, 0.2), (0, gy, 3.1), M("charcoal"), c, parent=root)
+        uw, ud, ux = W * 0.68, D + 1.0, W * 0.16
+        uy = gy - 0.5
+        box(f"{tag}_upper", (uw, ud, 2.8), (ux, uy, 3.3), accent, c, parent=root)
+        panoramic(root, f"{tag}_upano", c, ux - uw * 0.14, uy - ud / 2, 3.6, uw * 0.62, 2.0, 2)
+        fins(root, f"{tag}_ufin", c, ux + uw * 0.2, ux + uw / 2 - 0.1, uy - ud / 2, 3.3, 2.8, 4)
+        _win_group(root, uw, ud, uy, 3.8, 1.6, c, f"{tag}_u", xoff=ux, front=False)
+        box(f"{tag}_roof", (uw + 0.4, ud + 0.4, 0.26), (ux, uy, 6.1), M("roof"), c, parent=root)
+        tx = -W / 2 + (W / 2 - uw / 2 + ux) / 2
+        box(f"{tag}_terrace_rail", (W / 2 - uw / 2 + ux - 0.2, 0.05, 0.9), (tx, yf + 0.1, 3.3), M("glass"), c, parent=root)
+    elif style == 1:    # mono-pitch: two storeys, full-width glazing, balcony, wood band
+        box(f"{tag}_body", (W, D, 6.0), (0, gy, 0), wall, c, parent=root)
+        panoramic(root, f"{tag}_gpano", c, W * 0.14, yf, 0.3, W * 0.6, 2.5, 3)
+        box(f"{tag}_wood", (W * 0.3, 0.1, 6.0), (-W / 2 + W * 0.15, yf - 0.05, 0), accent, c, parent=root)
+        panoramic(root, f"{tag}_upano", c, W * 0.14, yf, 3.35, W * 0.5, 2.2, 2)
+        balcony(root, f"{tag}_balc", c, W * 0.14, yf, 3.1, W * 0.58, 1.2)
+        _win_group(root, W, D, gy, 0.6, 1.9, c, f"{tag}_g", front=False)
+        _win_group(root, W, D, gy, 3.6, 1.6, c, f"{tag}_u", front=False)
+        r = box(f"{tag}_roof", (W + 0.8, D + 1.0, 0.25), (0, gy, 6.15), M("roof"), c, parent=root)
+        r.rotation_euler.x = math.radians(9)
+    elif style == 2:    # pavilion: wide single storey, deep roof overhang, all-glass front, roof studio + pergola
+        W2 = W + 0.6
+        box(f"{tag}_body", (W2, D, 3.3), (0, gy, 0), wall, c, parent=root)
+        panoramic(root, f"{tag}_gpano", c, -0.2, yf, 0.25, W2 * 0.8, 2.8, 5)
+        _win_group(root, W2, D, gy, 0.6, 2.0, c, f"{tag}_g", front=False)
+        box(f"{tag}_roof", (W2 + 1.4, D + 1.8, 0.3), (0, gy - 0.3, 3.3), M("charcoal"), c, parent=root)
+        box(f"{tag}_fascia", (W2 + 1.4, 0.12, 0.18), (0, gy - 0.3 - (D + 1.8) / 2, 3.42), accent, c, parent=root)
+        box(f"{tag}_studio", (W2 * 0.4, D * 0.55, 2.3), (-W2 * 0.22, gy + 0.7, 3.6), M("glass"), c, parent=root)
+        _win_group(root, W2 * 0.4, D * 0.55, gy + 0.7, 3.8, 1.8, c, f"{tag}_u", xoff=-W2 * 0.22, step=1.2)
+        box(f"{tag}_studio_roof", (W2 * 0.4 + 0.5, D * 0.55 + 0.5, 0.2), (-W2 * 0.22, gy + 0.7, 5.9), M("charcoal"), c, parent=root)
+        for k in range(6):  # pergola over the roof terrace
+            box(f"{tag}_perg{k}", (0.12, D * 0.7, 0.14), (W2 * 0.08 + k * 0.55, gy, 5.55), M("clad_wood"), c, parent=root)
+        for sx in (W2 * 0.06, W2 * 0.06 + 2.9):
+            box(f"{tag}_pergpost{sx:.1f}", (0.12, 0.12, 1.95), (sx, gy - D * 0.33, 3.6), M("clad_wood"), c, parent=root)
+        garage = False
+    elif style == 3:    # modern gable: dark barn volume with gable glazing + white flat-roof wing
+        bw = W * 0.62
+        bx = -W * 0.18
+        gable_body(f"{tag}_barn", bw, D + 0.4, 3.3, 2.3, (bx, gy, 0), accent if accent_name == "clad_dark" else M("clad_dark"), c, root)
+        gable_roof(tag, c, root, bx, gy, bw, D + 0.4, 3.3, 2.3)
+        panoramic(root, f"{tag}_gpano", c, bx, gy - (D + 0.4) / 2, 0.25, bw * 0.55, 4.3, 3)
+        _win_group(root, bw, D + 0.4, gy, 0.6, 1.9, c, f"{tag}_g", xoff=bx, front=False)
+        ww = W * 0.42
+        wx = bx + bw / 2 + ww / 2
+        box(f"{tag}_wing", (ww, D - 0.6, 2.9), (wx, gy + 0.3, 0), wall, c, parent=root)
+        panoramic(root, f"{tag}_wpano", c, wx, gy + 0.3 - (D - 0.6) / 2, 0.3, ww * 0.7, 2.2, 2)
+        box(f"{tag}_wing_roof", (ww + 0.3, D - 0.3, 0.2), (wx, gy + 0.3, 2.9), M("charcoal"), c, parent=root)
+        garage = False
+    else:               # stacked: white ground cube, rotated timber upper cube, corner glazing
+        gw = W * 0.8
+        gx = -W * 0.1
+        box(f"{tag}_ground", (gw, D, 3.1), (gx, gy, 0), wall, c, parent=root)
+        panoramic(root, f"{tag}_corner_f", c, gx - gw / 2 + 1.3, yf, 0.3, 2.5, 2.45, 2)
+        box(f"{tag}_corner_s", (0.08, 2.4, 2.45), (gx - gw / 2 - 0.03, yf + 1.25, 0.3), M("window"), c, parent=root)
+        _win_group(root, gw, D, gy, 0.6, 1.9, c, f"{tag}_g", xoff=gx, front=False)
+        box(f"{tag}_roof_g", (gw + 0.3, D + 0.3, 0.2), (gx, gy, 3.1), M("charcoal"), c, parent=root)
+        uw, ud = W * 0.55, D * 0.95
+        ux, uy = gx + gw * 0.18, gy + 0.35
+        box(f"{tag}_upper", (uw, ud, 2.9), (ux, uy, 3.3), M("clad_wood"), c, parent=root)
+        panoramic(root, f"{tag}_upano", c, ux, uy - ud / 2, 3.55, uw * 0.78, 2.3, 3)
+        _win_group(root, uw, ud, uy, 3.8, 1.6, c, f"{tag}_u", xoff=ux, front=False)
+        box(f"{tag}_roof", (uw + 0.3, ud + 0.3, 0.22), (ux, uy, 6.2), M("charcoal"), c, parent=root)
+        box(f"{tag}_terrace_rail", (gw * 0.4, 0.05, 0.9), (gx - gw * 0.28, yf + 0.1, 3.3), M("glass"), c, parent=root)
+        for k in range(2):
+            sh = shrub(f"{tag}_roofplant{k}", (gx - gw * 0.38 + k * 1.2, gy + 1.2, 3.3), 0.4, c)
+            sh.parent = root
+
+    # entrance (on the main volume front)
+    if style != 3:
+        box(f"{tag}_door", (1.05, 0.12, 2.25), (-W * 0.5 + 1.0 if style != 1 else -W * 0.3, yf - 0.02, 0), M("wood"), c, parent=root)
+        box(f"{tag}_porch", (0.25, 0.12, 0.25), (-W * 0.5 + 1.8 if style != 1 else -W * 0.3 + 0.8, yf - 0.08, 2.1), M("lamp"), c, parent=root)
+
+    if garage:
+        box(f"{tag}_garage", (3.0, 4.2, 2.6), (W / 2 + 1.35, gy + 0.2, 0), M("charcoal"), c, parent=root)
+        box(f"{tag}_garage_door", (2.4, 0.1, 2.1), (W / 2 + 1.35, gy + 0.2 - 2.12, 0), M("concrete"), c, parent=root)
+        box(f"{tag}_garage_light", (2.4, 0.1, 0.08), (W / 2 + 1.35, gy + 0.2 - 2.16, 2.3), M("rail_glow"), c, parent=root)
+    else:               # carport: slim roof on posts
+        box(f"{tag}_carport", (3.2, 4.6, 0.18), (W / 2 + 1.35, gy - 0.2, 2.6), M("clad_wood"), c, parent=root)
+        for py in (-2.0, 2.0):
+            box(f"{tag}_cp_post{py}", (0.12, 0.12, 2.6), (W / 2 + 2.8, gy - 0.2 + py, 0), M("charcoal"), c, parent=root)
+
+    # yard tree: half the lots get a blossoming cherry
+    ty = (x - 4.2 if face_south else x + 4.2, y + (2.9 if face_south else -2.9), WALK_H)
+    if idx % 2 == 0:
+        cherry(f"{tag}_cherry", ty, size=0.85)
+    else:
+        tree(f"{tag}_yardtree", ty, size=0.8)
 
 
 def free_plot(idx, x, y):
@@ -523,7 +787,7 @@ def build_lots():
             free_plot(p, x, y)
         else:
             h += 1
-            house(h, x, y, face_south=(y > 0) ^ (abs(y) > 15), style=(h * 7) % 3)
+            house(h, x, y, face_south=(y > 0) ^ (abs(y) > 15), style=(h * 3) % 5)
     return h, p
 
 
@@ -533,30 +797,42 @@ def build_greenery():
     for x in range(-62, 63, 7):
         if abs(x) > 6 and random.random() < 0.85:
             tree(f"T_front_{i}", (x + random.uniform(-1, 1), -36.5, 0)); i += 1
-    for x in range(-44, 45, 9):
-        tree(f"T_lake_{i}", (x + 4, 35.5, WALK_H), kind="leaf_pink" if random.random() < 0.4 else None); i += 1
     for y in range(-26, 27, 8):
         for xx in (-38.5, 38.5):
             tree(f"T_side_{i}", (xx, y, 0)); i += 1
-    # plaza blossoms
-    for k in range(6):
-        a = k * math.pi / 3
-        tree(f"T_plaza_{k}", (math.cos(a) * 12.5, math.sin(a) * 12.5 + 0.0, 0), kind="leaf_pink", size=0.9)
+    # corner gardens around the plaza (between plaza and lots)
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            cherry(f"T_corner_{sx}_{sy}", (sx * 7.6, sy * 7.4, WALK_H), size=0.75)
+    # shrubs and flower beds along the front street (foreground)
+    for k, x in enumerate(range(-30, 31, 4)):
+        if abs(x) < 8:
+            continue
+        shrub(f"S_front_{k}", (x + random.uniform(-0.6, 0.6), -23.8, WALK_H), random.uniform(0.4, 0.6))
+    for k, x in enumerate((-15, -25, 15, 25)):
+        flowerbed(f"Bed_front_{k}", (x, -36.6, 0), 3.2, 1.0, coll("Trees"))
+    # flowering trees along the avenue approach
+    for k, y in enumerate(range(-58, -38, 7)):
+        cherry(f"T_ave_L{k}", (-7.6, y, 0), size=0.9)
+        cherry(f"T_ave_R{k}", (7.6, y, 0), size=0.9)
     # foreground clusters & meadows
     for k in range(140):
         x = random.uniform(-110, 110)
         y = random.uniform(-110, -38)
         if abs(x) < 7 or abs(y + 30) < 7:
             continue
-        kind = "leaf_gold" if random.random() < 0.12 else None
+        if random.random() < 0.15:
+            cherry(f"T_meadow_{k}", (x, y, 0), size=random.uniform(0.9, 1.3))
+            continue
+        kind = "leaf_gold" if random.random() < 0.1 else None
         tree(f"T_meadow_{k}", (x, y, 0), kind=kind, size=random.uniform(0.9, 1.5))
     for k in range(60):
         x = random.choice([random.uniform(-110, -42), random.uniform(42, 110)])
         y = random.uniform(-36, 33)
         tree(f"T_edge_{k}", (x, y, 0), size=random.uniform(0.9, 1.4))
     # hero foreground framing trees (bottom corners of the vertical frame)
-    tree("T_hero_L", (-18.5, -45, 0), kind="leaf_gold", size=1.25)
-    tree("T_hero_L2", (-19, -52, 0), kind="leaf_pink", size=1.3)
+    cherry("T_hero_L", (-17.5, -44, 0), size=1.3)
+    tree("T_hero_R", (13, -42, 0), kind="leaf_gold", size=1.1)
 
 
 def build_background():
@@ -570,8 +846,8 @@ def build_background():
         w = random.uniform(7, 15)
         d = random.uniform(7, 14)
         center = 1 - min(abs(x - 110) / 170, 1)
-        h = random.uniform(8, 18) + center * random.uniform(10, 34)
-        y = random.uniform(240, 275)
+        h = random.uniform(10, 20) + center * random.uniform(12, 40)
+        y = random.uniform(300, 335)
         box(f"Tower_{k}", (w, d, h), (x, y, -0.9), M("tower_lit"), c)
         if random.random() < 0.35:
             box(f"Tower_{k}_crown", (w * 0.6, d * 0.6, h * 0.15), (x, y, h - 0.9), M("tower_lit"), c)
@@ -580,7 +856,10 @@ def build_background():
         x += w + random.uniform(1, 6)
         k += 1
     # far shore strip
-    box("FarShore", (900, 70, 0.6), (0, 262, -0.9), M("grass"), c)
+    box("FarShore", (900, 70, 0.6), (0, 318, -0.9), M("grass"), c)
+    for k in range(60):  # dark tree line on the far shore
+        blob(f"FarTree_{k}", random.uniform(3, 5), (-250 + k * 9 + random.uniform(-3, 3), 286, 0.5), M("shrub_dark"), c,
+             scale=(1, 1, 0.8))
     # low-poly mountains
     # soft, wide ridges (not peaks): flattened low-poly hills in two layers
     for j in range(16):
@@ -605,8 +884,8 @@ def build_camera():
     cam.clip_end = 3000
     ob = bpy.data.objects.new("Cam_Reels", cam)
     bpy.context.scene.collection.objects.link(ob)
-    ob.location = Vector((-20, -76, 27))
-    target = Vector((6, 8, 9))
+    ob.location = Vector((-18, -66, 31))
+    target = Vector((3, 7, 0))
     ob.rotation_euler = (target - ob.location).to_track_quat("-Z", "Y").to_euler()
     bpy.context.scene.camera = ob
 
@@ -632,7 +911,12 @@ def setup_render(args):
         s.view_settings.look = "AgX - Medium High Contrast"
     except TypeError:
         pass
-    s.view_settings.exposure = 0.45
+    s.view_settings.exposure = 0.4
+    # mist pass drives a soft aerial haze that separates the district from the skyline
+    s.view_layers[0].use_pass_mist = True
+    s.world.mist_settings.start = 60
+    s.world.mist_settings.depth = 900
+    s.world.mist_settings.falloff = "LINEAR"
     # cozy bloom on lamps / windows / sun
     s.use_nodes = True
     nt = s.node_tree
@@ -641,12 +925,24 @@ def setup_render(args):
     glare = nt.nodes.new("CompositorNodeGlare")
     glare.glare_type = "FOG_GLOW"
     glare.quality = "HIGH"
-    glare.threshold = 1.2
-    glare.size = 8
-    glare.mix = -0.55
+    glare.threshold = 0.9
+    glare.size = 9
+    glare.mix = -0.2
+    ramp = nt.nodes.new("CompositorNodeValToRGB")
+    els = ramp.color_ramp.elements
+    els[0].position, els[0].color = 0.0, (0, 0, 0, 1)
+    els[1].position, els[1].color = 1.0, (0, 0, 0, 1)      # sky (mist = 1) stays untouched
+    for pos, v in ((0.25, 0.1), (0.9, 0.38), (0.985, 0.38)):
+        e = els.new(pos)
+        e.color = (v, v, v, 1)
+    haze = nt.nodes.new("CompositorNodeMixRGB")
+    haze.inputs[2].default_value = (*srgb("#c98ba6"), 1)
     out = nt.nodes.new("CompositorNodeComposite")
     nt.links.new(rl.outputs["Image"], glare.inputs["Image"])
-    nt.links.new(glare.outputs["Image"], out.inputs["Image"])
+    nt.links.new(rl.outputs["Mist"], ramp.inputs["Fac"])
+    nt.links.new(ramp.outputs["Image"], haze.inputs["Fac"])
+    nt.links.new(glare.outputs["Image"], haze.inputs[1])
+    nt.links.new(haze.outputs["Image"], out.inputs["Image"])
 
 
 # --------------------------------------------------------------------------- main
